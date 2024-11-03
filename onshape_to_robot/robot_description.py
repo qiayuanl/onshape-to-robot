@@ -175,21 +175,13 @@ class RobotURDF(RobotDescription):
         super().append('    ' + str)
 
     def addDummyLink(self, name, visualMatrix=None, visualSTL=None, visualColor=None):
-        self.append('<link name="'+name+'">')
-        self.append('    <inertial>')
-        self.append('        <origin xyz="0 0 0" rpy="0 0 0"/>')
-        # XXX: We use a low mass because PyBullet consider mass 0 as world fixed
-        if self.noDynamics:
-            self.append('        <mass value="0"/>')
-        else:
-            self.append('        <mass value="1e-9"/>')
-        self.append(
-            '        <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>')
-        self.append('        </inertial>')
         if visualSTL is not None:
+            self.append('<link name="' + name + '">')
             self.addSTL(visualMatrix, visualSTL, visualColor,
                         name+"_visual", 'visual')
-        self.append('</link>')
+        else:
+            self.append('<link name="' + name + '"/>')
+        super().append('')
 
     def addDummyBaseLinkMethod(self, name):
         # adds a dummy base_link for ROS users
