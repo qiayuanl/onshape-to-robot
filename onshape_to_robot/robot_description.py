@@ -555,12 +555,6 @@ class RobotXacro(RobotURDF):
     def append(self, str):
         super().append('    ' + str)
 
-    def addDummyLink(self, name, visualMatrix=None, visualSTL=None, visualColor=None):
-        super().addDummyLink('${prefix}' + name, visualMatrix, visualSTL, visualColor)
-
-    def addFixedJoint(self, parent, child, matrix, name=None):
-        super().addFixedJoint('${prefix}' + parent, '${prefix}' + child, matrix, name)
-
     def startLink(self, name, matrix):
         super().startLink('${prefix}' + name, matrix)
 
@@ -571,7 +565,8 @@ class RobotXacro(RobotURDF):
         super().addPart(matrix, stl, mass, com, inertia, color, shapes, '${prefix}' + name)
 
     def addJoint(self, jointType, linkFrom, linkTo, transform, name, jointLimits, zAxis=[0, 0, 1]):
-        super().addJoint(jointType, '${prefix}' + linkFrom, '${prefix}' + linkTo, transform, name, jointLimits, zAxis)
+        super().addJoint(jointType, '${prefix}' + linkFrom, '${prefix}' + linkTo, transform, '${prefix}' + name,
+                         jointLimits, zAxis)
 
     def finalize(self):
         super().append(self.additionalXML)
