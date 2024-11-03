@@ -14,6 +14,11 @@ def xml_escape(unescaped: str) -> str:
         "\"": "&quot;"
     })
 
+
+def zero_if_small(x, threshold=1e-10):
+    return 0 if abs(x) < threshold else x
+
+
 def rotationMatrixToEulerAngles(R):
     sy = math.sqrt(R[0, 0] * R[0, 0] + R[1, 0] * R[1, 0])
 
@@ -28,14 +33,14 @@ def rotationMatrixToEulerAngles(R):
         y = math.atan2(-R[2, 0], sy)
         z = 0
 
-    return np.array([x, y, z])
+    return np.array([zero_if_small(x), zero_if_small(y), zero_if_small(z)])
 
 
 def origin(matrix):
-    urdf = '<origin xyz="%g %g %g" rpy="%g %g %g" />'
-    x = matrix[0, 3]
-    y = matrix[1, 3]
-    z = matrix[2, 3]
+    urdf = '<origin xyz="%g %g %g" rpy="%g %g %g"/>'
+    x = zero_if_small(matrix[0, 3])
+    y = zero_if_small(matrix[1, 3])
+    z = zero_if_small(matrix[2, 3])
     rpy = rotationMatrixToEulerAngles(matrix)
 
     return urdf % (x, y, z, rpy[0], rpy[1], rpy[2])
@@ -163,21 +168,24 @@ class RobotURDF(RobotDescription):
     def __init__(self, name):
         super().__init__(name)
         self.ext = 'urdf'
-        self.append('<robot name="' + self.robotName + '">')
+        super().append('<robot name="' + self.robotName + '">')
         pass
+
+    def append(self, str):
+        super().append('    ' + str)
 
     def addDummyLink(self, name, visualMatrix=None, visualSTL=None, visualColor=None):
         self.append('<link name="'+name+'">')
-        self.append('<inertial>')
-        self.append('<origin xyz="0 0 0" rpy="0 0 0" />')
+        self.append('    <inertial>')
+        self.append('        <origin xyz="0 0 0" rpy="0 0 0"/>')
         # XXX: We use a low mass because PyBullet consider mass 0 as world fixed
         if self.noDynamics:
-            self.append('<mass value="0" />')
+            self.append('        <mass value="0"/>')
         else:
-            self.append('<mass value="1e-9" />')
+            self.append('        <mass value="1e-9"/>')
         self.append(
-            '<inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />')
-        self.append('</inertial>')
+            '        <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>')
+        self.append('        </inertial>')
         if visualSTL is not None:
             self.addSTL(visualMatrix, visualSTL, visualColor,
                         name+"_visual", 'visual')
@@ -187,9 +195,9 @@ class RobotURDF(RobotDescription):
         # adds a dummy base_link for ROS users
         self.append('<link name="base_link"></link>')
         self.append('<joint name="base_link_to_base" type="fixed">')
-        self.append('<parent link="base_link"/>')
-        self.append('<child link="' + name + '" />')
-        self.append('<origin rpy="0.0 0 0" xyz="0 0 0"/>')
+        self.append('    <parent link="base_link"/>')
+        self.append('    <child link="' + name + '"/>')
+        self.append('    <origin rpy="0.0 0 0" xyz="0 0 0"/>')
         self.append('</joint>')
 
     def addFixedJoint(self, parent, child, matrix, name=None):
@@ -197,12 +205,12 @@ class RobotURDF(RobotDescription):
             name = parent+'_'+child+'_fixing'
 
         self.append('<joint name="'+name+'" type="fixed">')
-        self.append(origin(matrix))
-        self.append('<parent link="'+parent+'" />')
-        self.append('<child link="'+child+'" />')
-        self.append('<axis xyz="0 0 0"/>')
+        self.append('    ' + origin(matrix))
+        self.append('    <parent link="' + parent + '"/>')
+        self.append('    <child link="' + child + '"/>')
+        self.append('    <axis xyz="0 0 0"/>')
         self.append('</joint>')
-        self.append('')
+        super().append('')
 
     def startLink(self, name, matrix):
         self._link_name = name
@@ -230,20 +238,20 @@ class RobotURDF(RobotDescription):
                     stl_combine.simplify_stl(self.meshDir+'/'+filename, self.maxSTLSize)
                 self.addSTL(np.identity(4), filename, color, self._link_name, node)
 
-        self.append('<inertial>')
-        self.append('<origin xyz="%g %g %g" rpy="0 0 0"/>' %
+        self.append('    <inertial>')
+        self.append('        <origin xyz="%g %g %g" rpy="0 0 0"/>' %
                     (com[0], com[1], com[2]))
-        self.append('<mass value="%g" />' % mass)
-        self.append('<inertia ixx="%g" ixy="%g"  ixz="%g" iyy="%g" iyz="%g" izz="%g" />' %
+        self.append('        <mass value="%g"/>' % mass)
+        self.append('        <inertia ixx="%g" ixy="%g" ixz="%g" iyy="%g" iyz="%g" izz="%g"/>' %
                     (inertia[0, 0], inertia[0, 1], inertia[0, 2], inertia[1, 1], inertia[1, 2], inertia[2, 2]))
-        self.append('</inertial>')
+        self.append('    </inertial>')
 
         if self.useFixedLinks:
             self.append(
-                '<visual><geometry><box size="0 0 0" /></geometry></visual>')
+                '  <visual><geometry><box size="0 0 0"/></geometry></visual>')
 
         self.append('</link>')
-        self.append('')
+        super().append('')
 
         if self.useFixedLinks:
             n = 0
@@ -268,17 +276,17 @@ class RobotURDF(RobotDescription):
         material_name = name + "_material"
         material_name = xml_escape(material_name)
 
-        self.append('<'+node+'>')
-        self.append(origin(matrix))
-        self.append('<geometry>')
-        self.append(f'<mesh filename="package://{stl_file}"/>')
-        self.append('</geometry>')
+        self.append('    <' + node + '>')
+        self.append('        ' + origin(matrix))
+        self.append('        <geometry>')
+        self.append(f'            <mesh filename="package://{stl_file}"/>')
+        self.append('        </geometry>')
         if node == 'visual':
-            self.append(f'<material name="{material_name}">')
-            self.append('<color rgba="%g %g %g 1.0"/>' %
+            self.append(f'        <material name="{material_name}">')
+            self.append('            <color rgba="%g %g %g 1.0"/>' %
                         (color[0], color[1], color[2]))
-            self.append('</material>')
-        self.append('</'+node+'>')
+            self.append('        </material>')
+        self.append('    </' + node + '>')
 
     def addPart(self, matrix, stl, mass, com, inertia, color, shapes=None, name=''):
         if stl is not None:
@@ -312,13 +320,13 @@ class RobotURDF(RobotDescription):
                         self.append(origin(matrix*shape['transform']))
                         self.append('<geometry>')
                         if shape['type'] == 'cube':
-                            self.append('<box size="%g %g %g" />' %
+                            self.append('<box size="%g %g %g"/>' %
                                         tuple(shape['parameters']))
                         if shape['type'] == 'cylinder':
                             self.append(
-                                '<cylinder length="%g" radius="%g" />' % tuple(shape['parameters']))
+                                '<cylinder length="%g" radius="%g"/>' % tuple(shape['parameters']))
                         if shape['type'] == 'sphere':
-                            self.append('<sphere radius="%g" />' %
+                            self.append('<sphere radius="%g"/>' %
                                         shape['parameters'])
                         self.append('</geometry>')
 
@@ -332,23 +340,23 @@ class RobotURDF(RobotDescription):
         self.addLinkDynamics(matrix, mass, com, inertia)
 
     def addJoint(self, jointType, linkFrom, linkTo, transform, name, jointLimits, zAxis=[0, 0, 1]):
-        self.append('<joint name="'+name+'" type="'+jointType+'">')
-        self.append(origin(transform))
-        self.append('<parent link="'+linkFrom+'" />')
-        self.append('<child link="'+linkTo+'" />')
-        self.append('<axis xyz="%g %g %g"/>' % tuple(zAxis))
+        self.append('<joint name="' + name + '" type="' + jointType + '">')
+        self.append('    ' + origin(transform))
+        self.append('    <parent link="' + linkFrom + '"/>')
+        self.append('    <child link="' + linkTo + '"/>')
+        self.append('    <axis xyz="%g %g %g"/>' % tuple(zAxis))
         lowerUpperLimits = ''
         if jointLimits is not None:
             lowerUpperLimits = 'lower="%g" upper="%g"' % jointLimits
-        self.append('<limit effort="%g" velocity="%g" %s/>' %
+        self.append('    <limit effort="%g" velocity="%g" %s/>' %
                     (self.jointMaxEffortFor(name), self.jointMaxVelocityFor(name), lowerUpperLimits))
-        self.append('<joint_properties friction="0.0"/>')
+        self.append('    <joint_properties friction="0.0"/>')
         self.append('</joint>')
-        self.append('')
+        super().append('')
 
     def finalize(self):
-        self.append(self.additionalXML)
-        self.append('</robot>')
+        super().append(self.additionalXML)
+        super().append('</robot>')
 
 
 class RobotSDF(RobotDescription):
