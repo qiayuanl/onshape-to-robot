@@ -551,7 +551,7 @@ class RobotXacro(RobotURDF):
         self.ext = 'xacro'
         RobotDescription.append(self, '<?xml version="1.0"?>')
         RobotDescription.append(self, '<robot xmlns:xacro="http://www.ros.org/wiki/xacro">')
-        super().append('<xacro:macro name="' + self.robotName + '" params="prefix">')
+        super().append('<xacro:macro name="' + self.robotName + '" params="prefix:=\'\'">')
 
     def append(self, str):
         super().append('    ' + str)
