@@ -94,7 +94,7 @@ config['addDummyBaseLink'] = configGet('addDummyBaseLink', False)
 config['robotName'] = configGet('robotName', 'onshape')
 
 # additional XML code to insert
-if config['outputFormat'] == 'urdf':
+if config['outputFormat'] == 'urdf' or config['outputFormat'] == 'xacro':
     additionalFileName = configGet('additionalUrdfFile', '')
 else:
     additionalFileName = configGet('additionalSdfFile', '')

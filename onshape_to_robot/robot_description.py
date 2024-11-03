@@ -542,3 +542,38 @@ class RobotSDF(RobotDescription):
         self.append(self.additionalXML)
         self.append('</model>')
         self.append('</sdf>')
+
+
+class RobotXacro(RobotURDF):
+    def __init__(self, name):
+        RobotDescription.__init__(self, name)
+        self.ext = 'xacro'
+        RobotDescription.append(self, '<?xml version="1.0"?>')
+        RobotDescription.append(self, '<robot xmlns:xacro="http://www.ros.org/wiki/xacro">')
+        super().append('<xacro:macro name="' + self.robotName + '" params="prefix">')
+
+    def append(self, str):
+        super().append('    ' + str)
+
+    def addDummyLink(self, name, visualMatrix=None, visualSTL=None, visualColor=None):
+        super().addDummyLink('${prefix}' + name, visualMatrix, visualSTL, visualColor)
+
+    def addFixedJoint(self, parent, child, matrix, name=None):
+        super().addFixedJoint('${prefix}' + parent, '${prefix}' + child, matrix, name)
+
+    def startLink(self, name, matrix):
+        super().startLink('${prefix}' + name, matrix)
+
+    def addFrame(self, name, matrix):
+        super().addFrame('${prefix}' + name, matrix)
+
+    def addPart(self, matrix, stl, mass, com, inertia, color, shapes=None, name=''):
+        super().addPart(matrix, stl, mass, com, inertia, color, shapes, '${prefix}' + name)
+
+    def addJoint(self, jointType, linkFrom, linkTo, transform, name, jointLimits, zAxis=[0, 0, 1]):
+        super().addJoint(jointType, '${prefix}' + linkFrom, '${prefix}' + linkTo, transform, name, jointLimits, zAxis)
+
+    def finalize(self):
+        super().append(self.additionalXML)
+        super().append('</xacro:macro>')
+        RobotDescription.append(self, '</robot>')

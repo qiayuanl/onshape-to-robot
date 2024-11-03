@@ -7,7 +7,7 @@ from sys import exit
 import os
 import hashlib
 from . import csg
-from .robot_description import RobotURDF, RobotSDF
+from .robot_description import RobotURDF, RobotSDF, RobotXacro
 
 
 partNames = {}
@@ -23,9 +23,11 @@ def main():
         robot = RobotURDF(config['robotName'])
     elif config['outputFormat'] == 'sdf':
         robot = RobotSDF(config['robotName'])
+    elif config['outputFormat'] == 'xacro':
+        robot = RobotXacro(config['robotName'])
     else:
         print(Fore.RED + 'ERROR: Unknown output format: ' +
-            config['outputFormat']+' (supported are urdf and sdf)' + Style.RESET_ALL)
+              config['outputFormat'] + ' (supported are urdf, sdf and xacro)' + Style.RESET_ALL)
         exit()
     robot.drawCollisions = config['drawCollisions']
     robot.jointMaxEffort = config['jointMaxEffort']
@@ -253,7 +255,7 @@ def main():
 
     print("\n" + Style.BRIGHT + "* Writing " +
         robot.ext.upper()+" file" + Style.RESET_ALL)
-    with open(config['outputDirectory']+'/robot.'+robot.ext, 'w', encoding="utf-8") as stream:
+    with open(config['outputDirectory'] + '/' + config['robotName'] + '.' + robot.ext, 'w', encoding="utf-8") as stream:
         stream.write(robot.xml)
 
     if len(config['postImportCommands']):
