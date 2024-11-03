@@ -355,7 +355,8 @@ class RobotURDF(RobotDescription):
         super().append('')
 
     def finalize(self):
-        super().append(self.additionalXML)
+        if self.additionalXML != '':  # Avoid adding empty additionalXML
+            super().append(self.additionalXML)
         super().append('</robot>')
 
 
