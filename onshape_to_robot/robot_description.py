@@ -306,28 +306,25 @@ class RobotURDF(RobotDescription):
                             stl), color, name, entry)
                 else:
                     # Inserting pure shapes in the URDF model
-                    self.append('<!-- Shapes for '+name+' -->')
+                    self.append('    <!-- Shapes for ' + name + ' -->')
                     for shape in shapes:
-                        self.append('<'+entry+'>')
-                        self.append(origin(matrix*shape['transform']))
-                        self.append('<geometry>')
+                        self.append('    <' + entry + '>')
+                        self.append('        ' + origin(matrix * shape['transform']))
+                        self.append('        <geometry>')
                         if shape['type'] == 'cube':
-                            self.append('<box size="%g %g %g"/>' %
-                                        tuple(shape['parameters']))
+                            self.append('            <box size="%g %g %g"/>' % tuple(shape['parameters']))
                         if shape['type'] == 'cylinder':
-                            self.append(
-                                '<cylinder length="%g" radius="%g"/>' % tuple(shape['parameters']))
+                            self.append('            <cylinder length="%g" radius="%g"/>' % tuple(shape['parameters']))
                         if shape['type'] == 'sphere':
-                            self.append('<sphere radius="%g"/>' %
-                                        shape['parameters'])
-                        self.append('</geometry>')
+                            self.append('            <sphere radius="%g"/>' % shape['parameters'])
+                        self.append('        </geometry>')
 
                         if entry == 'visual':
-                            self.append('<material name="'+name+'_material">')
-                            self.append('<color rgba="%g %g %g 1.0"/>' %
+                            self.append('        <material name="' + name + '_material">')
+                            self.append('            <color rgba="%g %g %g 1.0"/>' %
                                         (color[0], color[1], color[2]))
-                            self.append('</material>')
-                        self.append('</'+entry+'>')
+                            self.append('        </material>')
+                        self.append('    </' + entry + '>')
 
         self.addLinkDynamics(matrix, mass, com, inertia)
 
