@@ -232,10 +232,11 @@ class RobotURDF(RobotDescription):
 
         self.append('    <inertial>')
         self.append('        <origin xyz="%g %g %g" rpy="0 0 0"/>' %
-                    (com[0], com[1], com[2]))
+                    (zero_if_small(com[0]), zero_if_small(com[1]), zero_if_small(com[2])))
         self.append('        <mass value="%g"/>' % mass)
         self.append('        <inertia ixx="%g" ixy="%g" ixz="%g" iyy="%g" iyz="%g" izz="%g"/>' %
-                    (inertia[0, 0], inertia[0, 1], inertia[0, 2], inertia[1, 1], inertia[1, 2], inertia[2, 2]))
+                    (zero_if_small(inertia[0, 0]), zero_if_small(inertia[0, 1]), zero_if_small(inertia[0, 2]),
+                     zero_if_small(inertia[1, 1]), zero_if_small(inertia[1, 2]), zero_if_small(inertia[2, 2])))
         self.append('    </inertial>')
 
         if self.useFixedLinks:
