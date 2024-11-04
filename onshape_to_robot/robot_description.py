@@ -546,6 +546,12 @@ class RobotXacro(RobotURDF):
     def append(self, str):
         super().append('    ' + str)
 
+    def jointMaxEffortFor(self, jointName):
+        return super().jointMaxEffortFor(jointName[9:])
+
+    def jointMaxVelocityFor(self, jointName):
+        return super().jointMaxVelocityFor(jointName[9:])
+
     def startLink(self, name, matrix):
         super().startLink('${prefix}' + name, matrix)
 
