@@ -562,6 +562,7 @@ class RobotXacro(RobotURDF):
                          jointLimits, zAxis)
 
     def finalize(self):
-        super().append(self.additionalXML)
+        if self.additionalXML != '':
+            RobotDescription.append(self, self.additionalXML)
         super().append('</xacro:macro>')
         RobotDescription.append(self, '</robot>')
